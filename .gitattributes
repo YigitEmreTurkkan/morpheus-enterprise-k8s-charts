@@ -1,4 +1,6 @@
-*.tpl linguist-language=Go-Template
-*.yaml linguist-language=YAML
 * text=auto
+*.yaml linguist-detectable=true
+*.yml linguist-detectable=true
+*.tpl linguist-detectable=true
+*.tpl linguist-language=Go-Template
 *.py linguist-detectable=true
