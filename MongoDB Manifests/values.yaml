@@ -1,0 +1,21 @@
+database:
+  image:
+    repository: mongo
+    tag: "7.0"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  credentials:
+    databaseName: mongodb
+    username: mongouser
+    password: mongopass
+    rootUsername: root
+    rootPassword: rootpass
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+

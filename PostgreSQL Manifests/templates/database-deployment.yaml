@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "postgres-database.fullname" . }}
+  labels:
+    {{- include "postgres-database.labels" . | nindent 4 }}
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "postgres-database.selectorLabels" . | nindent 6 }}
+      component: database
+  template:
+    metadata:
+      labels:
+        {{- include "postgres-database.selectorLabels" . | nindent 8 }}
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+        imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+        ports:
+        - name: postgres
+          containerPort: 5432
+          protocol: TCP
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres-database.fullname" . }}-secret
+              key: database-name
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres-database.fullname" . }}-secret
+              key: database-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres-database.fullname" . }}-secret
+              key: database-password
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          {{- toYaml .Values.database.resources | nindent 10 }}
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: {{ include "postgres-database.fullname" . }}-pvc
+

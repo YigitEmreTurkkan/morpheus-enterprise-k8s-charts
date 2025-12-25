@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mongodb-database.fullname" . }}
+  labels:
+    {{- include "mongodb-database.labels" . | nindent 4 }}
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "mongodb-database.selectorLabels" . | nindent 6 }}
+      component: database
+  template:
+    metadata:
+      labels:
+        {{- include "mongodb-database.selectorLabels" . | nindent 8 }}
+        component: database
+    spec:
+      containers:
+      - name: mongodb
+        image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+        imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+        ports:
+        - name: mongodb
+          containerPort: 27017
+          protocol: TCP
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mongodb-database.fullname" . }}-secret
+              key: root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mongodb-database.fullname" . }}-secret
+              key: root-password
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mongodb-database.fullname" . }}-secret
+              key: database-name
+        volumeMounts:
+        - name: mongodb-storage
+          mountPath: /data/db
+        resources:
+          {{- toYaml .Values.database.resources | nindent 10 }}
+      volumes:
+      - name: mongodb-storage
+        persistentVolumeClaim:
+          claimName: {{ include "mongodb-database.fullname" . }}-pvc
+
