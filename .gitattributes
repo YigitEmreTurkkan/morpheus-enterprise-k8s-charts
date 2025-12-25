@@ -1,0 +1,4 @@
+*.tpl linguist-language=Go-Template
+*.yaml linguist-language=YAML
+* text=auto
+*.py linguist-detectable=true
