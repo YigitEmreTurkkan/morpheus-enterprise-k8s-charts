@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mysql-database
+description: A Helm chart for MySQL database on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "8.0"
+

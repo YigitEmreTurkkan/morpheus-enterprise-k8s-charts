@@ -19,15 +19,26 @@ morpheus-enterprise-k8s-charts/
 │       ├── database-service.yaml      # PostgreSQL service
 │       └── database-pvc.yaml          # Persistent volume claim
 │
-└── mongodb-database/                  # MongoDB Database Helm Chart
+├── mongodb-database/                  # MongoDB Database Helm Chart
+│   ├── Chart.yaml                     # Helm chart metadata
+│   ├── values.yaml                    # MongoDB configuration values
+│   ├── README.md                      # MongoDB chart documentation
+│   └── templates/
+│       ├── _helpers.tpl               # Helm template helper functions
+│       ├── secret.yaml                # Database credentials secret
+│       ├── database-deployment.yaml   # MongoDB deployment
+│       ├── database-service.yaml      # MongoDB service
+│       └── database-pvc.yaml          # Persistent volume claim
+│
+└── mysql-database/                    # MySQL Database Helm Chart
     ├── Chart.yaml                     # Helm chart metadata
-    ├── values.yaml                    # MongoDB configuration values
-    ├── README.md                      # MongoDB chart documentation
+    ├── values.yaml                    # MySQL configuration values
+    ├── README.md                      # MySQL chart documentation
     └── templates/
         ├── _helpers.tpl               # Helm template helper functions
         ├── secret.yaml                # Database credentials secret
-        ├── database-deployment.yaml   # MongoDB deployment
-        ├── database-service.yaml      # MongoDB service
+        ├── database-deployment.yaml   # MySQL deployment
+        ├── database-service.yaml      # MySQL service
         └── database-pvc.yaml          # Persistent volume claim
 ```
 
@@ -56,6 +67,14 @@ This library provides ready-to-use Helm charts for commonly used applications an
 - **Version**: 0.1.0
 - **Image**: mongo:7.0
 - **Port**: 27017
+- **Features**: Persistent storage, root and user authentication, resource limits
+
+### 🐬 MySQL Database
+- **Directory**: `mysql-database/`
+- **Chart Name**: `mysql-database`
+- **Version**: 0.1.0
+- **Image**: mysql:8.0
+- **Port**: 3306
 - **Features**: Persistent storage, root and user authentication, resource limits
 
 ## 🚀 Morpheus Integration
@@ -96,10 +115,15 @@ Create a separate blueprint for each chart:
 2. **Chart Path**: `mongodb-database`
 3. **Name**: MongoDB Database
 
+**MySQL Blueprint:**
+1. Repeat the same steps
+2. **Chart Path**: `mysql-database`
+3. **Name**: MySQL Database
+
 #### 4. Deploy
 
 1. **Provisioning > Apps** → **+ ADD**
-2. Select your desired blueprint (PostgreSQL or MongoDB)
+2. Select your desired blueprint (PostgreSQL, MongoDB, or MySQL)
 3. Fill in required parameters:
    - Database name
    - Username/Password
@@ -116,7 +140,9 @@ Provisioning > Apps
 ├── postgres-db-instance-1      (PostgreSQL app instance)
 ├── postgres-db-instance-2      (Another PostgreSQL instance)
 ├── mongodb-db-instance-1        (MongoDB app instance)
-└── mongodb-db-instance-2        (Another MongoDB instance)
+├── mongodb-db-instance-2        (Another MongoDB instance)
+├── mysql-db-instance-1          (MySQL app instance)
+└── mysql-db-instance-2          (Another MySQL instance)
 ```
 
 Each app instance:
@@ -141,6 +167,13 @@ helm install postgres-db . --namespace <namespace>
 ```bash
 cd mongodb-database
 helm install mongodb-db . --namespace <namespace>
+```
+
+### Deploy MySQL
+
+```bash
+cd mysql-database
+helm install mysql-db . --namespace <namespace>
 ```
 
 ### Override Values
@@ -211,6 +244,7 @@ helm template test "./<chart-name>/"
 Each chart has its own detailed README.md file:
 - [PostgreSQL Chart Documentation](./postgresql-database/README.md)
 - [MongoDB Chart Documentation](./mongodb-database/README.md)
+- [MySQL Chart Documentation](./mysql-database/README.md)
 
 ## 🤝 Contributing
 

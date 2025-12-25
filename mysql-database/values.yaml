@@ -1,0 +1,20 @@
+database:
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  credentials:
+    databaseName: votingdb
+    username: votinguser
+    password: votingpass
+    rootPassword: rootpass
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+

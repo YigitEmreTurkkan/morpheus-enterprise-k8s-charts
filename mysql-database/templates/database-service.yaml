@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mysql-database.fullname" . }}
+  labels:
+    {{- include "mysql-database.labels" . | nindent 4 }}
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: mysql
+      protocol: TCP
+      name: mysql
+  selector:
+    {{- include "mysql-database.selectorLabels" . | nindent 4 }}
+    component: database
+
