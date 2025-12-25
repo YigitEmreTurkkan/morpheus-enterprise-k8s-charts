@@ -30,15 +30,26 @@ morpheus-enterprise-k8s-charts/
 │       ├── database-service.yaml      # MongoDB service
 │       └── database-pvc.yaml          # Persistent volume claim
 │
-└── mysql-database/                    # MySQL Database Helm Chart
+├── mysql-database/                    # MySQL Database Helm Chart
+│   ├── Chart.yaml                     # Helm chart metadata
+│   ├── values.yaml                    # MySQL configuration values
+│   ├── README.md                      # MySQL chart documentation
+│   └── templates/
+│       ├── _helpers.tpl               # Helm template helper functions
+│       ├── secret.yaml                # Database credentials secret
+│       ├── database-deployment.yaml   # MySQL deployment
+│       ├── database-service.yaml      # MySQL service
+│       └── database-pvc.yaml          # Persistent volume claim
+│
+└── mariadb-database/                  # MariaDB Database Helm Chart
     ├── Chart.yaml                     # Helm chart metadata
-    ├── values.yaml                    # MySQL configuration values
-    ├── README.md                      # MySQL chart documentation
+    ├── values.yaml                    # MariaDB configuration values
+    ├── README.md                      # MariaDB chart documentation
     └── templates/
         ├── _helpers.tpl               # Helm template helper functions
         ├── secret.yaml                # Database credentials secret
-        ├── database-deployment.yaml   # MySQL deployment
-        ├── database-service.yaml      # MySQL service
+        ├── database-deployment.yaml   # MariaDB deployment
+        ├── database-service.yaml      # MariaDB service
         └── database-pvc.yaml          # Persistent volume claim
 ```
 
@@ -74,6 +85,14 @@ This library provides ready-to-use Helm charts for commonly used applications an
 - **Chart Name**: `mysql-database`
 - **Version**: 0.1.0
 - **Image**: mysql:8.0
+- **Port**: 3306
+- **Features**: Persistent storage, root and user authentication, resource limits
+
+### 🗄️ MariaDB Database
+- **Directory**: `mariadb-database/`
+- **Chart Name**: `mariadb-database`
+- **Version**: 0.1.0
+- **Image**: mariadb:11.0
 - **Port**: 3306
 - **Features**: Persistent storage, root and user authentication, resource limits
 
@@ -120,10 +139,15 @@ Create a separate blueprint for each chart:
 2. **Chart Path**: `mysql-database`
 3. **Name**: MySQL Database
 
+**MariaDB Blueprint:**
+1. Repeat the same steps
+2. **Chart Path**: `mariadb-database`
+3. **Name**: MariaDB Database
+
 #### 4. Deploy
 
 1. **Provisioning > Apps** → **+ ADD**
-2. Select your desired blueprint (PostgreSQL, MongoDB, or MySQL)
+2. Select your desired blueprint (PostgreSQL, MongoDB, MySQL, or MariaDB)
 3. Fill in required parameters:
    - Database name
    - Username/Password
@@ -142,7 +166,9 @@ Provisioning > Apps
 ├── mongodb-db-instance-1        (MongoDB app instance)
 ├── mongodb-db-instance-2        (Another MongoDB instance)
 ├── mysql-db-instance-1          (MySQL app instance)
-└── mysql-db-instance-2          (Another MySQL instance)
+├── mysql-db-instance-2          (Another MySQL instance)
+├── mariadb-db-instance-1        (MariaDB app instance)
+└── mariadb-db-instance-2        (Another MariaDB instance)
 ```
 
 Each app instance:
@@ -174,6 +200,13 @@ helm install mongodb-db . --namespace <namespace>
 ```bash
 cd mysql-database
 helm install mysql-db . --namespace <namespace>
+```
+
+### Deploy MariaDB
+
+```bash
+cd mariadb-database
+helm install mariadb-db . --namespace <namespace>
 ```
 
 ### Override Values
@@ -245,6 +278,7 @@ Each chart has its own detailed README.md file:
 - [PostgreSQL Chart Documentation](./postgresql-database/README.md)
 - [MongoDB Chart Documentation](./mongodb-database/README.md)
 - [MySQL Chart Documentation](./mysql-database/README.md)
+- [MariaDB Chart Documentation](./mariadb-database/README.md)
 
 ## 🤝 Contributing
 

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mariadb-database
+description: A Helm chart for MariaDB database on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "11.0"
+
