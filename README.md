@@ -1,11 +1,11 @@
-# Kubernetes Application Library
+# Morpheus Enterprise K8s Charts
 
 This repository is a library of Helm charts for deployable applications on Kubernetes. All charts are **customized for integration with Morpheus Cloud Management Platform**.
 
 ## 📁 Repository Structure
 
 ```
-k8s-library/
+morpheus-enterprise-k8s-charts/
 ├── README.md                          # This file - General library documentation
 │
 ├── postgresql-database/               # PostgreSQL Database Helm Chart
@@ -68,7 +68,7 @@ This library is specifically designed for use with **Morpheus Cloud Management P
 
 ```bash
 git clone <this-repository>
-cd k8s-library
+cd morpheus-enterprise-k8s-charts
 ```
 
 #### 2. Morpheus SCM Integration
