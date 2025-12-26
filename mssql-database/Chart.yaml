@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mssql-database
+description: A Helm chart for Microsoft SQL Server database on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "2022-latest"
+

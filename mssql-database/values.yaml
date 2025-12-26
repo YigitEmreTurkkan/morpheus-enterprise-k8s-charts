@@ -1,0 +1,22 @@
+database:
+  image:
+    repository: mcr.microsoft.com/mssql/server
+    tag: "2022-latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  credentials:
+    saPassword: "YourStrong@Passw0rd"
+    databaseName: votingdb
+    username: votinguser
+    password: "YourStrong@Passw0rd"
+  productId: "Express"  # Options: Express, Developer, Enterprise, EnterpriseCore, Standard, Web
+  acceptEula: "Y"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+

@@ -41,15 +41,26 @@ morpheus-enterprise-k8s-charts/
 │       ├── database-service.yaml      # MySQL service
 │       └── database-pvc.yaml          # Persistent volume claim
 │
-└── mariadb-database/                  # MariaDB Database Helm Chart
+├── mariadb-database/                  # MariaDB Database Helm Chart
+│   ├── Chart.yaml                     # Helm chart metadata
+│   ├── values.yaml                    # MariaDB configuration values
+│   ├── README.md                      # MariaDB chart documentation
+│   └── templates/
+│       ├── _helpers.tpl               # Helm template helper functions
+│       ├── secret.yaml                # Database credentials secret
+│       ├── database-deployment.yaml   # MariaDB deployment
+│       ├── database-service.yaml      # MariaDB service
+│       └── database-pvc.yaml          # Persistent volume claim
+│
+└── mssql-database/                    # Microsoft SQL Server Database Helm Chart
     ├── Chart.yaml                     # Helm chart metadata
-    ├── values.yaml                    # MariaDB configuration values
-    ├── README.md                      # MariaDB chart documentation
+    ├── values.yaml                    # MSSQL configuration values
+    ├── README.md                      # MSSQL chart documentation
     └── templates/
         ├── _helpers.tpl               # Helm template helper functions
         ├── secret.yaml                # Database credentials secret
-        ├── database-deployment.yaml   # MariaDB deployment
-        ├── database-service.yaml      # MariaDB service
+        ├── database-deployment.yaml   # MSSQL deployment
+        ├── database-service.yaml      # MSSQL service
         └── database-pvc.yaml          # Persistent volume claim
 ```
 
@@ -95,6 +106,14 @@ This library provides ready-to-use Helm charts for commonly used applications an
 - **Image**: mariadb:11.0
 - **Port**: 3306
 - **Features**: Persistent storage, root and user authentication, resource limits
+
+### 🪟 Microsoft SQL Server Database
+- **Directory**: `mssql-database/`
+- **Chart Name**: `mssql-database`
+- **Version**: 0.1.0
+- **Image**: mcr.microsoft.com/mssql/server:2022-latest
+- **Port**: 1433
+- **Features**: Persistent storage, SA authentication, product ID selection (Express/Developer/Enterprise), resource limits (minimum 2GB memory)
 
 ## 🚀 Morpheus Integration
 
@@ -144,10 +163,15 @@ Create a separate blueprint for each chart:
 2. **Chart Path**: `mariadb-database`
 3. **Name**: MariaDB Database
 
+**MSSQL Blueprint:**
+1. Repeat the same steps
+2. **Chart Path**: `mssql-database`
+3. **Name**: Microsoft SQL Server Database
+
 #### 4. Deploy
 
 1. **Provisioning > Apps** → **+ ADD**
-2. Select your desired blueprint (PostgreSQL, MongoDB, MySQL, or MariaDB)
+2. Select your desired blueprint (PostgreSQL, MongoDB, MySQL, MariaDB, or MSSQL)
 3. Fill in required parameters:
    - Database name
    - Username/Password
@@ -168,7 +192,9 @@ Provisioning > Apps
 ├── mysql-db-instance-1          (MySQL app instance)
 ├── mysql-db-instance-2          (Another MySQL instance)
 ├── mariadb-db-instance-1        (MariaDB app instance)
-└── mariadb-db-instance-2        (Another MariaDB instance)
+├── mariadb-db-instance-2        (Another MariaDB instance)
+├── mssql-db-instance-1          (MSSQL app instance)
+└── mssql-db-instance-2          (Another MSSQL instance)
 ```
 
 Each app instance:
@@ -208,6 +234,15 @@ helm install mysql-db . --namespace <namespace>
 cd mariadb-database
 helm install mariadb-db . --namespace <namespace>
 ```
+
+### Deploy MSSQL
+
+```bash
+cd mssql-database
+helm install mssql-db . --namespace <namespace>
+```
+
+**Note**: MSSQL requires minimum 2GB memory. Ensure your cluster has sufficient resources.
 
 ### Override Values
 
@@ -279,6 +314,7 @@ Each chart has its own detailed README.md file:
 - [MongoDB Chart Documentation](./mongodb-database/README.md)
 - [MySQL Chart Documentation](./mysql-database/README.md)
 - [MariaDB Chart Documentation](./mariadb-database/README.md)
+- [MSSQL Chart Documentation](./mssql-database/README.md)
 
 ## 🤝 Contributing
 

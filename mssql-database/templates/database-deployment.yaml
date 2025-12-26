@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mssql-database.fullname" . }}
+  labels:
+    {{- include "mssql-database.labels" . | nindent 4 }}
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "mssql-database.selectorLabels" . | nindent 6 }}
+      component: database
+  template:
+    metadata:
+      labels:
+        {{- include "mssql-database.selectorLabels" . | nindent 8 }}
+        component: database
+    spec:
+      containers:
+      - name: mssql
+        image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+        imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+        ports:
+        - name: mssql
+          containerPort: 1433
+          protocol: TCP
+        env:
+        - name: ACCEPT_EULA
+          value: {{ .Values.database.acceptEula | quote }}
+        - name: MSSQL_PID
+          value: {{ .Values.database.productId | quote }}
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mssql-database.fullname" . }}-secret
+              key: sa-password
+        volumeMounts:
+        - name: mssql-storage
+          mountPath: /var/opt/mssql
+        resources:
+          {{- toYaml .Values.database.resources | nindent 10 }}
+      volumes:
+      - name: mssql-storage
+        persistentVolumeClaim:
+          claimName: {{ include "mssql-database.fullname" . }}-pvc
+
