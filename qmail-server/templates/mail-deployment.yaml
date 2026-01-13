@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qmail-server.fullname" . }}
+  labels:
+    {{- include "qmail-server.labels" . | nindent 4 }}
+    component: mail-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "qmail-server.selectorLabels" . | nindent 6 }}
+      component: mail-server
+  template:
+    metadata:
+      labels:
+        {{- include "qmail-server.selectorLabels" . | nindent 8 }}
+        component: mail-server
+    spec:
+      containers:
+      - name: qmail
+        image: "{{ .Values.mail.image.repository }}:{{ .Values.mail.image.tag }}"
+        imagePullPolicy: {{ .Values.mail.image.pullPolicy }}
+        ports:
+        - name: smtp
+          containerPort: {{ .Values.mail.ports.smtp }}
+          protocol: TCP
+        - name: smtp-submission
+          containerPort: {{ .Values.mail.ports.smtpSubmission }}
+          protocol: TCP
+        - name: pop3
+          containerPort: {{ .Values.mail.ports.pop3 }}
+          protocol: TCP
+        - name: imap
+          containerPort: {{ .Values.mail.ports.imap }}
+          protocol: TCP
+        - name: pop3s
+          containerPort: {{ .Values.mail.ports.pop3s }}
+          protocol: TCP
+        - name: imaps
+          containerPort: {{ .Values.mail.ports.imaps }}
+          protocol: TCP
+        - name: http
+          containerPort: {{ .Values.mail.ports.http }}
+          protocol: TCP
+        env:
+        - name: HOSTNAME
+          value: {{ .Values.mail.hostname | quote }}
+        - name: DOMAIN
+          value: {{ .Values.mail.domain | quote }}
+        volumeMounts:
+        - name: mail-storage
+          mountPath: /var/qmail
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.mail.ports.http }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.mail.ports.http }}
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.mail.resources | nindent 10 }}
+      volumes:
+      - name: mail-storage
+        persistentVolumeClaim:
+          claimName: {{ include "qmail-server.fullname" . }}-pvc
+

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: postfix-server
+description: A Helm chart for Postfix mail server with Dovecot IMAP/POP3
+type: application
+version: 0.1.0
+appVersion: "latest"
+
+

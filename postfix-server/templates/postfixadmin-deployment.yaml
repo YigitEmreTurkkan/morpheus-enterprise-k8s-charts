@@ -1,0 +1,79 @@
+{{- if .Values.postfixadmin.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-admin
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    component: postfixadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "postfix-server.selectorLabels" . | nindent 6 }}
+      component: postfixadmin
+  template:
+    metadata:
+      labels:
+        {{- include "postfix-server.selectorLabels" . | nindent 8 }}
+        component: postfixadmin
+    spec:
+      containers:
+      - name: postfixadmin
+        image: "{{ .Values.postfixadmin.image.repository }}:{{ .Values.postfixadmin.image.tag }}"
+        imagePullPolicy: {{ .Values.postfixadmin.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        env:
+        {{- if eq .Values.postfixadmin.database.type "mysql" }}
+        - name: POSTFIXADMIN_DB_TYPE
+          value: "mysqli"
+        - name: POSTFIXADMIN_DB_HOST
+          value: {{ .Values.postfixadmin.database.host | quote }}
+        - name: POSTFIXADMIN_DB_PORT
+          value: {{ .Values.postfixadmin.database.port | quote }}
+        - name: POSTFIXADMIN_DB_NAME
+          value: {{ .Values.postfixadmin.database.name | quote }}
+        - name: POSTFIXADMIN_DB_USER
+          value: {{ .Values.postfixadmin.database.username | quote }}
+        - name: POSTFIXADMIN_DB_PASSWORD
+          value: {{ .Values.postfixadmin.database.password | quote }}
+        - name: MYSQL_ROOT_PASSWORD
+          value: "rootpass"
+        - name: MYSQL_PASSWORD
+          value: {{ .Values.postfixadmin.database.password | quote }}
+        - name: MYSQL_USER
+          value: {{ .Values.postfixadmin.database.username | quote }}
+        - name: MYSQL_DATABASE
+          value: {{ .Values.postfixadmin.database.name | quote }}
+        {{- end }}
+        - name: POSTFIXADMIN_SETUP_PASSWORD
+          value: {{ .Values.postfixadmin.admin.password | quote }}
+        volumeMounts:
+        - name: postfixadmin-storage
+          mountPath: /var/www/html
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.postfixadmin.resources | nindent 10 }}
+      volumes:
+      - name: postfixadmin-storage
+        emptyDir: {}
+{{- end }}
+

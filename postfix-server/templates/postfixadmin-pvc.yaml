@@ -1,0 +1,17 @@
+{{- if and .Values.postfixadmin.enabled (eq .Values.postfixadmin.database.type "sqlite") }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-admin-pvc
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    component: postfixadmin
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+{{- end }}
+
+

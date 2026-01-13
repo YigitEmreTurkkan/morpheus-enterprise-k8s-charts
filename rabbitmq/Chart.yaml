@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 3-management
+description: A Helm chart for deploying RabbitMQ
+name: rabbitmq
+type: application
+version: 0.1.0

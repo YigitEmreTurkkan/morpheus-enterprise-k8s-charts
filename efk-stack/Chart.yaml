@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 8.11.0
+description: A Helm chart for deploying EFK Stack
+name: efk-stack
+type: application
+version: 0.1.0

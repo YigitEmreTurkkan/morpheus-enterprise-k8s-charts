@@ -1,0 +1,25 @@
+gitlabRunner:
+  image:
+    repository: gitlab/gitlab-runner
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  port: 8093
+  registrationToken: ""
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: false  # GitLab Runner genelde internal kullanılır
+  className: "nginx"
+  host: gitlab-runner.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

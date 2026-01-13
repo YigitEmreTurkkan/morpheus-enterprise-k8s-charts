@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "roundcube-webmail.fullname" . }}
+  labels:
+    {{- include "roundcube-webmail.labels" . | nindent 4 }}
+    component: webmail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "roundcube-webmail.selectorLabels" . | nindent 6 }}
+      component: webmail
+  template:
+    metadata:
+      labels:
+        {{- include "roundcube-webmail.selectorLabels" . | nindent 8 }}
+        component: webmail
+    spec:
+      containers:
+      - name: roundcube
+        image: "{{ .Values.webmail.image.repository }}:{{ .Values.webmail.image.tag }}"
+        imagePullPolicy: {{ .Values.webmail.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        env:
+        - name: ROUNDCUBEMAIL_DEFAULT_HOST
+          value: {{ .Values.webmail.mailServer.host | quote }}
+        - name: ROUNDCUBEMAIL_SMTP_SERVER
+          value: {{ .Values.webmail.mailServer.host | quote }}
+        - name: ROUNDCUBEMAIL_SMTP_PORT
+          value: {{ .Values.webmail.mailServer.smtpPort | quote }}
+        - name: ROUNDCUBEMAIL_IMAP_PORT
+          value: {{ .Values.webmail.mailServer.imapPort | quote }}
+        - name: ROUNDCUBEMAIL_SMTP_SECURE
+          value: {{ .Values.webmail.mailServer.smtpSecure | quote }}
+        - name: ROUNDCUBEMAIL_IMAP_SECURE
+          value: {{ .Values.webmail.mailServer.imapSecure | quote }}
+        volumeMounts:
+        - name: webmail-storage
+          mountPath: /var/www/html/config
+        - name: webmail-data
+          mountPath: /var/www/html/logs
+        - name: webmail-config
+          mountPath: /var/www/html/config/config.docker.inc.php
+          subPath: config.docker.inc.php
+        resources:
+          {{- toYaml .Values.webmail.resources | nindent 10 }}
+      volumes:
+      - name: webmail-storage
+        persistentVolumeClaim:
+          claimName: {{ include "roundcube-webmail.fullname" . }}-pvc
+      - name: webmail-data
+        emptyDir: {}
+      - name: webmail-config
+        configMap:
+          name: {{ include "roundcube-webmail.fullname" . }}-config

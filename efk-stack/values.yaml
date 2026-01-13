@@ -1,0 +1,50 @@
+efk:
+  kibana:
+    image:
+      repository: docker.elastic.co/kibana/kibana
+      tag: "8.11.0"
+      pullPolicy: IfNotPresent
+    storage:
+      size: 20Gi
+    port: 5601
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+  elasticsearch:
+    image:
+      repository: docker.elastic.co/elasticsearch/elasticsearch
+      tag: "8.11.0"
+    storage:
+      size: 50Gi
+    port: 9200
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 4Gi
+      requests:
+        cpu: 2000m
+        memory: 2Gi
+  fluentd:
+    image:
+      repository: fluent/fluentd
+      tag: "v1.16-debian-1"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: kibana.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

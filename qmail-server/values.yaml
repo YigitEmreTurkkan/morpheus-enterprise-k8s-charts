@@ -1,0 +1,41 @@
+mail:
+  image:
+    repository: robreardon/qmail
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  domain: cloudflex.tr
+  hostname: mail.cloudflex.tr
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    smtp: 25
+    smtpSubmission: 587
+    pop3: 110
+    imap: 143
+    pop3s: 995
+    imaps: 993
+    http: 80
+ingress:
+  enabled: true
+  className: "nginx"
+  namespace: "ingress-nginx"
+  host: mail.cloudflex.tr
+  usePatchJob: true  # Use patch job to merge TCP ConfigMap (recommended to avoid overwriting existing ConfigMaps)
+  http:
+    enabled: true  # Enable HTTP ingress for web admin interface
+  annotations:
+    # Cluster default TLS will be used automatically by ingress controller
+    # If your cluster has a default TLS certificate configured, it will be used
+    # If you need custom annotations (e.g., cert-manager), add them here
+    # Example: cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"  # Using cloudflex wildcard TLS certificate
+

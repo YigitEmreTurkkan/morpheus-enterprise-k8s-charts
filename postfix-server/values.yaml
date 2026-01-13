@@ -1,0 +1,75 @@
+mail:
+  image:
+    repository: tvial/docker-mailserver
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  domain: cloudflex.tr
+  hostname: mail.cloudflex.tr
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    smtp: 25
+    smtpSubmission: 587
+    pop3: 110
+    imap: 143
+    pop3s: 995
+    imaps: 993
+    http: 80
+  # Postfix configuration
+  postfix:
+    myhostname: mail.cloudflex.tr
+    mydomain: cloudflex.tr
+    mynetworks: "127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
+    message_size_limit: "10485760"  # 10MB
+  # Dovecot configuration
+  dovecot:
+    enabled: true
+    auth_mechanisms: "plain login"
+
+postfixadmin:
+  enabled: true
+  image:
+    repository: postfixadmin
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  admin:
+    email: admin@cloudflex.tr
+    password: Admin123!
+  database:
+    type: "mysql"  # Options: sqlite, mysql
+    host: "mysql-database.mail.svc.cluster.local"
+    port: 3306
+    name: "postfixadmin"
+    username: "postfixadmin"
+    password: "postfixadmin123"
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  namespace: "ingress-nginx"
+  host: mail.cloudflex.tr
+  usePatchJob: true
+  http:
+    enabled: true
+  postfixadmin:
+    enabled: true
+    path: "/postfixadmin"
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"
+

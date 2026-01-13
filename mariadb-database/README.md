@@ -17,7 +17,7 @@ mariadb-database/
     └── database-pvc.yaml
 ```
 
-## Components
+## Componentsss
 
 - **MariaDB Deployment**: MariaDB 11.0 container
 - **Service**: ClusterIP service (port 3306)

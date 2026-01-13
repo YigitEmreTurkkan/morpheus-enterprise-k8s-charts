@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "roundcube-webmail.fullname" . }}-config
+  labels:
+    {{- include "roundcube-webmail.labels" . | nindent 4 }}
+data:
+  config.docker.inc.php: |
+    <?php
+      $config['db_dsnw'] = 'sqlite:////var/roundcube/db/sqlite.db?mode=0646';
+      $config['db_dsnr'] = '';
+      // IMAP host with STARTTLS (required by Dovecot for plaintext auth)
+      $config['imap_host'] = 'tls://{{ .Values.webmail.mailServer.host }}:{{ .Values.webmail.mailServer.imapPort }}';
+      // Postfix SMTP Configuration (from postfix-server values.yaml)
+      // Postfix SMTP settings:
+      // - mail.ports.smtp: 25
+      // - mail.ports.smtpSubmission: 587
+      // - mail.domain: cloudflex.tr
+      // - mail.hostname: mail.cloudflex.tr
+      $config['smtp_host'] = '{{ .Values.webmail.mailServer.host }}:{{ .Values.webmail.mailServer.smtpPort }}';
+      $config['smtp_port'] = {{ .Values.webmail.mailServer.smtpPort }};
+      // Postfix SMTP Submission port (587) - supports authentication
+      $config['smtp_user'] = '%u';  // Use same username as IMAP (Postfix format: user@domain)
+      $config['smtp_pass'] = '%p';  // Use same password as IMAP
+      $config['smtp_auth_type'] = 'PLAIN';  // Postfix SMTP PLAIN authentication
+      $config['smtp_helo_host'] = '{{ .Values.webmail.hostname }}';  // Postfix HELO hostname
+      $config['smtp_timeout'] = 30;  // Postfix SMTP connection timeout
+      // Postfix domain configuration
+      $config['username_domain'] = '';  // Postfix uses full email addresses (user@domain)
+      $config['username_domain'] = '';
+      $config['imap_auth_type'] = 'PLAIN';  // Use PLAIN authentication for Dovecot
+      $config['imap_auth_cid'] = null;
+      $config['imap_auth_pw'] = null;
+      $config['temp_dir'] = '/tmp/roundcube-temp';
+      $config['skin'] = 'elastic';
+      $config['request_path'] = '/';
+      $config['plugins'] = array_filter(array_unique(array_merge($config['plugins'], ['archive', 'zipdownload'])));
+      {{- if or (eq .Values.webmail.mailServer.imapSecure "") (eq .Values.webmail.mailServer.imapSecure "none") }}
+      // TLS/SSL kapalı - internal cluster communication
+      // Dovecot plaintext authentication için STARTTLS gerektiriyor
+      $config['imap_conn_options'] = array(
+        'ssl' => array(
+          'verify_peer' => false,
+          'verify_peer_name' => false,
+          'allow_self_signed' => true,
+        ),
+        'disable_authenticator' => false,
+      );
+      // STARTTLS kullan (Dovecot plaintext auth için gerekli)
+      $config['imap_transport'] = 'tls';
+      $config['smtp_conn_options'] = array(
+        'ssl' => array(
+          'verify_peer' => false,
+          'verify_peer_name' => false,
+          'allow_self_signed' => true,
+        ),
+      );
+      // Qmail IMAP authentication ayarları
+      $config['imap_delimiter'] = null;
+      $config['imap_ns_personal'] = null;
+      $config['imap_ns_other'] = null;
+      $config['imap_ns_shared'] = null;
+      $config['imap_force_caps'] = false;
+      $config['imap_force_lsub'] = false;
+      {{- else }}
+      // TLS/SSL ayarları
+      $config['imap_conn_options'] = array(
+        'ssl' => array(
+          'verify_peer' => false,
+          'verify_peer_name' => false,
+          'allow_self_signed' => true,
+        ),
+      );
+      $config['smtp_conn_options'] = array(
+        'ssl' => array(
+          'verify_peer' => false,
+          'verify_peer_name' => false,
+          'allow_self_signed' => true,
+        ),
+      );
+      // Qmail IMAP authentication ayarları
+      $config['imap_delimiter'] = null;
+      $config['imap_ns_personal'] = null;
+      $config['imap_ns_other'] = null;
+      $config['imap_ns_shared'] = null;
+      $config['imap_force_caps'] = false;
+      $config['imap_force_lsub'] = false;
+      {{- end }}
+

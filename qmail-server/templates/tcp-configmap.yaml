@@ -1,0 +1,25 @@
+{{- if and .Values.ingress.enabled (not .Values.ingress.usePatchJob) }}
+{{- /* 
+  This ConfigMap is only created if usePatchJob is false.
+  If usePatchJob is true, the patch job will handle ConfigMap creation/merging.
+  Default behavior: usePatchJob should be true to avoid overwriting existing ConfigMaps.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-services
+  namespace: {{ .Values.ingress.namespace }}
+  labels:
+    {{- include "qmail-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress-tcp
+data:
+  {{- if .Values.ingress.enabled }}
+  "{{ .Values.mail.ports.smtp }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.smtp }}"
+  "{{ .Values.mail.ports.smtpSubmission }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.smtpSubmission }}"
+  "{{ .Values.mail.ports.pop3 }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.pop3 }}"
+  "{{ .Values.mail.ports.imap }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.imap }}"
+  "{{ .Values.mail.ports.pop3s }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.pop3s }}"
+  "{{ .Values.mail.ports.imaps }}": "{{ .Release.Namespace }}/{{ include "qmail-server.fullname" . }}:{{ .Values.mail.ports.imaps }}"
+  {{- end }}
+{{- end }}
+

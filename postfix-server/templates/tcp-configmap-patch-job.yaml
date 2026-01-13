@@ -1,0 +1,102 @@
+{{- if and .Values.ingress.enabled .Values.ingress.usePatchJob }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-tcp-configmap-patch
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingress-config
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "postfix-server.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ingress-config
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "postfix-server.fullname" . }}-patch-sa
+      containers:
+      - name: kubectl-patch
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "Patching tcp-services ConfigMap in namespace {{ .Values.ingress.namespace }}..."
+          
+          if kubectl get configmap tcp-services -n {{ .Values.ingress.namespace }} &>/dev/null; then
+            echo "Existing tcp-services ConfigMap found. Merging Postfix ports..."
+            kubectl patch configmap tcp-services -n {{ .Values.ingress.namespace }} --type merge -p '{
+              "data": {
+                "{{ .Values.mail.ports.smtp }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.smtp }}",
+                "{{ .Values.mail.ports.smtpSubmission }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.smtpSubmission }}",
+                "{{ .Values.mail.ports.pop3 }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.pop3 }}",
+                "{{ .Values.mail.ports.imap }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.imap }}",
+                "{{ .Values.mail.ports.pop3s }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.pop3s }}",
+                "{{ .Values.mail.ports.imaps }}": "{{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.imaps }}"
+              }
+            }'
+            echo "ConfigMap patched successfully!"
+          else
+            echo "No existing tcp-services ConfigMap found. Creating new one..."
+            kubectl create configmap tcp-services -n {{ .Values.ingress.namespace }} \
+              --from-literal="{{ .Values.mail.ports.smtp }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.smtp }}" \
+              --from-literal="{{ .Values.mail.ports.smtpSubmission }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.smtpSubmission }}" \
+              --from-literal="{{ .Values.mail.ports.pop3 }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.pop3 }}" \
+              --from-literal="{{ .Values.mail.ports.imap }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.imap }}" \
+              --from-literal="{{ .Values.mail.ports.pop3s }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.pop3s }}" \
+              --from-literal="{{ .Values.mail.ports.imaps }}={{ .Release.Namespace }}/{{ include "postfix-server.fullname" . }}:{{ .Values.mail.ports.imaps }}"
+            echo "ConfigMap created successfully!"
+          fi
+          
+          echo "Restarting ingress-nginx-controller to apply changes..."
+          kubectl rollout restart deployment ingress-nginx-controller -n {{ .Values.ingress.namespace }} || true
+          echo "Done!"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-patch-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-patch-role
+  namespace: {{ .Values.ingress.namespace }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "create", "patch", "update"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-patch-rolebinding
+  namespace: {{ .Values.ingress.namespace }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "postfix-server.fullname" . }}-patch-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "postfix-server.fullname" . }}-patch-sa
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+
+

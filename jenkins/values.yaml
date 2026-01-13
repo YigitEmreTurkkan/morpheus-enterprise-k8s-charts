@@ -1,0 +1,27 @@
+jenkins:
+  image:
+    repository: jenkins/jenkins
+    tag: "lts"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 50Gi
+  port: 8080
+  admin:
+    user: admin
+    password: admin123
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: jenkins.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

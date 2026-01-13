@@ -1,0 +1,50 @@
+webmail:
+  image:
+    repository: roundcube/roundcubemail
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 5Gi
+  domain: cloudflex.tr
+  hostname: webmail.cloudflex.tr
+  mailServer:
+    host: postfix-server.mail  # Postfix service name in Kubernetes
+    smtpPort: 587  # Postfix SMTP Submission port (matches postfix-server values.yaml mail.ports.smtpSubmission) - REQUIRES AUTHENTICATION
+    smtpSubmissionPort: 587  # Postfix SMTP Submission port (matches postfix-server values.yaml mail.ports.smtpSubmission)
+    imapPort: 143  # Postfix IMAP port (matches postfix-server values.yaml mail.ports.imap)
+    smtpSecure: ""  # Empty = no TLS for internal cluster communication
+    imapSecure: ""  # Empty = no TLS for internal cluster communication
+    # NOTE: Port 587 (SMTP Submission) supports authentication and is recommended for email sending.
+    # Postfix domain and hostname are configured in postfix-server/values.yaml:
+    # - mail.domain: cloudflex.tr
+    # - mail.hostname: mail.cloudflex.tr
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: webmail.cloudflex.tr
+  annotations:
+    # Cluster default TLS will be used automatically by ingress controller
+    # If your cluster has a default TLS certificate configured, it will be used
+    # If you need custom annotations (e.g., cert-manager), add them here
+    # Example: cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"  # Using cloudflex wildcard TLS certificate
+
+database:
+  type: "sqlite"  # Options: sqlite, mysql, postgresql
+  # For MySQL/PostgreSQL, uncomment and configure:
+  # host: "mysql-database.mail.svc.cluster.local"
+  # port: 3306
+  # name: "roundcube"
+  # username: "roundcube"
+  # password: "roundcube_password"
+

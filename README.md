@@ -52,17 +52,40 @@ morpheus-enterprise-k8s-charts/
 │       ├── database-service.yaml      # MariaDB service
 │       └── database-pvc.yaml          # Persistent volume claim
 │
-└── mssql-database/                    # Microsoft SQL Server Database Helm Chart
+├── mssql-database/                    # Microsoft SQL Server Database Helm Chart
+│   ├── Chart.yaml                     # Helm chart metadata
+│   ├── values.yaml                    # MSSQL configuration values
+│   ├── README.md                      # MSSQL chart documentation
+│   └── templates/
+│       ├── _helpers.tpl               # Helm template helper functions
+│       ├── secret.yaml                # Database credentials secret
+│       ├── database-deployment.yaml   # MSSQL deployment
+│       ├── database-service.yaml      # MSSQL service
+│       └── database-pvc.yaml          # Persistent volume claim
+│
+├── qmail-server/                      # Qmail Mail Server Helm Chart
+│   ├── Chart.yaml                     # Helm chart metadata
+│   ├── values.yaml                    # Qmail configuration values
+│   ├── README.md                      # Qmail chart documentation
+│   └── templates/
+│       ├── _helpers.tpl               # Helm template helper functions
+│       ├── mail-deployment.yaml       # Qmail deployment
+│       ├── mail-service.yaml          # Qmail service
+│       └── mail-pvc.yaml             # Persistent volume claim
+│
+└── roundcube-webmail/                 # Roundcube Webmail Helm Chart
     ├── Chart.yaml                     # Helm chart metadata
-    ├── values.yaml                    # MSSQL configuration values
-    ├── README.md                      # MSSQL chart documentation
+    ├── values.yaml                    # Roundcube configuration values
+    ├── README.md                      # Roundcube chart documentation
     └── templates/
         ├── _helpers.tpl               # Helm template helper functions
-        ├── secret.yaml                # Database credentials secret
-        ├── database-deployment.yaml   # MSSQL deployment
-        ├── database-service.yaml      # MSSQL service
-        └── database-pvc.yaml          # Persistent volume claim
+        ├── webmail-deployment.yaml    # Roundcube deployment
+        ├── webmail-service.yaml       # Roundcube service
+        ├── webmail-ingress.yaml       # Ingress for web access
+        └── webmail-pvc.yaml           # Persistent volume claim
 ```
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 ## 🎯 Purpose
 
@@ -114,6 +137,22 @@ This library provides ready-to-use Helm charts for commonly used applications an
 - **Image**: mcr.microsoft.com/mssql/server:2022-latest
 - **Port**: 1433
 - **Features**: Persistent storage, SA authentication, product ID selection (Express/Developer/Enterprise), resource limits (minimum 2GB memory)
+
+### 📧 Qmail Mail Server
+- **Directory**: `qmail-server/`
+- **Chart Name**: `qmail-server`
+- **Version**: 0.1.0
+- **Image**: robreardon/qmail:latest
+- **Ports**: 25 (SMTP), 587 (SMTP Submission), 110 (POP3), 143 (IMAP), 995 (POP3S), 993 (IMAPS)
+- **Features**: Standalone SMTP server, no external relay required, persistent storage, configurable domain, full mail server capabilities
+
+### 🌐 Roundcube Webmail
+- **Directory**: `roundcube-webmail/`
+- **Chart Name**: `roundcube-webmail`
+- **Version**: 0.1.0
+- **Image**: roundcube/roundcubemail:1.6-apache
+- **Port**: 80 (HTTP)
+- **Features**: Modern webmail interface, Qmail integration via IMAP/SMTP, HTTPS support, persistent storage, responsive UI
 
 ## 🚀 Morpheus Integration
 
@@ -168,15 +207,24 @@ Create a separate blueprint for each chart:
 2. **Chart Path**: `mssql-database`
 3. **Name**: Microsoft SQL Server Database
 
+**Qmail Blueprint:**
+1. Repeat the same steps
+2. **Chart Path**: `qmail-server`
+3. **Name**: Qmail Mail Server
+
+**Roundcube Blueprint:**
+1. Repeat the same steps
+2. **Chart Path**: `roundcube-webmail`
+3. **Name**: Roundcube Webmail
+
 #### 4. Deploy
 
 1. **Provisioning > Apps** → **+ ADD**
-2. Select your desired blueprint (PostgreSQL, MongoDB, MySQL, MariaDB, or MSSQL)
+2. Select your desired blueprint (PostgreSQL, MongoDB, MySQL, MariaDB, MSSQL, Qmail, or Roundcube)
 3. Fill in required parameters:
-   - Database name
-   - Username/Password
-   - Storage size
-   - Resource limits
+   - For databases: Database name, Username/Password, Storage size, Resource limits
+   - For Qmail: Mail domain, Hostname, Storage size, Resource limits
+   - For Roundcube: Webmail hostname, Mail server connection, Storage size, Resource limits
 4. Deploy
 
 ### Appearance in Morpheus
@@ -194,7 +242,11 @@ Provisioning > Apps
 ├── mariadb-db-instance-1        (MariaDB app instance)
 ├── mariadb-db-instance-2        (Another MariaDB instance)
 ├── mssql-db-instance-1          (MSSQL app instance)
-└── mssql-db-instance-2          (Another MSSQL instance)
+├── mssql-db-instance-2          (Another MSSQL instance)
+├── qmail-server-instance-1      (Qmail mail server instance)
+├── qmail-server-instance-2      (Another Qmail mail server instance)
+├── roundcube-webmail-instance-1  (Roundcube webmail instance)
+└── roundcube-webmail-instance-2  (Another Roundcube webmail instance)
 ```
 
 Each app instance:
@@ -244,6 +296,24 @@ helm install mssql-db . --namespace <namespace>
 
 **Note**: MSSQL requires minimum 2GB memory. Ensure your cluster has sufficient resources.
 
+### Deploy Qmail Mail Server
+
+```bash
+cd qmail-server
+helm install qmail-server . --namespace <namespace>
+```
+
+**Note**: Configure DNS records (MX, SPF, DKIM, DMARC) for proper mail delivery.
+
+### Deploy Roundcube Webmail
+
+```bash
+cd roundcube-webmail
+helm install roundcube-webmail . --namespace <namespace>
+```
+
+**Note**: Ensure Qmail server is deployed and accessible. Configure ingress hostname for web access.
+
 ### Override Values
 
 ```bash
@@ -258,7 +328,84 @@ helm install postgres-db . \
 - Kubernetes cluster (1.19+)
 - Helm 3.x
 - kubectl configured
+- NGINX Ingress Controller (or compatible ingress controller)
 - (For Morpheus) Morpheus platform access and SCM integration
+
+## 🌐 Ingress Configuration
+
+All charts that require external access are configured to work with **NGINX Ingress Controller**. The ingress configuration is standardized across all charts.
+
+### Charts with Ingress Support
+
+1. **Roundcube Webmail** - HTTP/HTTPS ingress for webmail access
+2. **Qmail Server** - TCP ConfigMap for mail ports (SMTP, IMAP, POP3) + HTTP ingress for web admin
+
+### Standard Ingress Configuration
+
+All ingress-enabled charts use the following standard configuration in `values.yaml`:
+
+```yaml
+ingress:
+  enabled: true
+  className: "nginx"                    # NGINX Ingress Controller
+  host: <your-hostname>                 # e.g., webmail.cloudflex.tr
+  http:
+    enabled: true                        # Enable HTTP ingress (for Qmail)
+  annotations:
+    # Custom annotations can be added here
+    # Example: cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls" # TLS certificate secret name
+```
+
+### Qmail Server Ingress
+
+Qmail server uses a **dual ingress approach**:
+
+1. **TCP ConfigMap** - For mail protocol ports (25, 587, 110, 143, 995, 993)
+   - Automatically created in `ingress-nginx` namespace
+   - Routes TCP traffic to Qmail service
+
+2. **HTTP Ingress** - For web admin interface (port 80)
+   - Standard HTTP ingress for web access
+   - Configured via `ingress.http.enabled: true`
+
+### Customizing Ingress
+
+To customize ingress settings for your environment:
+
+1. **Update values.yaml** in each chart:
+   ```yaml
+   ingress:
+     enabled: true
+     className: "nginx"              # Your ingress class name
+     host: "your-domain.com"         # Your domain
+     tls:
+       enabled: true
+       secretName: "your-tls-secret" # Your TLS certificate
+   ```
+
+2. **Or override during deployment**:
+   ```bash
+   helm install roundcube-webmail . \
+     --set ingress.host=webmail.yourdomain.com \
+     --set ingress.tls.secretName=your-tls-secret \
+     --namespace mail
+   ```
+
+### DNS Configuration
+
+After deploying, configure DNS records:
+
+- **Roundcube Webmail**: `webmail.cloudflex.tr` → Ingress IP
+- **Qmail Web Admin**: `mail.cloudflex.tr` → Ingress IP
+- **Qmail Mail**: `mail.cloudflex.tr` → Ingress IP (for MX records)
+
+Get the Ingress Controller's external IP:
+```bash
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+```
 
 ## 🏗️ Chart Structure
 
@@ -315,6 +462,8 @@ Each chart has its own detailed README.md file:
 - [MySQL Chart Documentation](./mysql-database/README.md)
 - [MariaDB Chart Documentation](./mariadb-database/README.md)
 - [MSSQL Chart Documentation](./mssql-database/README.md)
+- [Qmail Mail Server Chart Documentation](./qmail-server/README.md)
+- [Roundcube Webmail Chart Documentation](./roundcube-webmail/README.md)
 
 ## 🤝 Contributing
 

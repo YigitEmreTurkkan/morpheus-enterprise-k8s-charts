@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "argocd.fullname" . }}
+  labels:
+    {{ include "argocd.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "argocd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "argocd.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: argocd
+        image: "{{ .Values.argocd.image.repository }}:{{ .Values.argocd.image.tag }}"
+        imagePullPolicy: {{ .Values.argocd.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        {{ if .Values.argocd.resources }}
+        resources:
+          {{ toYaml .Values.argocd.resources | nindent 10 }}
+        {{ end }}
+        {{ if .Values.argocd.storage }}
+        volumeMounts:
+        - name: argocd-storage
+          mountPath: /data
+        {{ end }}
+      {{ if .Values.argocd.storage }}
+      volumes:
+      - name: argocd-storage
+        persistentVolumeClaim:
+          claimName: {{ include "argocd.fullname" . }}-pvc
+      {{ end }}

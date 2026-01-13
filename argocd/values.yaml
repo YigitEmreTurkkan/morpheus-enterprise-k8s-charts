@@ -1,0 +1,26 @@
+argocd:
+  image:
+    repository: quay.io/argoproj/argocd
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 10Gi
+  port: 8080
+  admin:
+    password: admin123
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: argocd.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

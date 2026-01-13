@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "keycloak.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "keycloak.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: keycloak
+        image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
+        imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.keycloak.port }}
+          protocol: TCP
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: {{ .Values.keycloak.admin.user | quote }}
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "keycloak.fullname" . }}-secret
+              key: admin-password
+        - name: KC_DB
+          value: {{ .Values.keycloak.database.vendor | quote }}
+        - name: KC_DB_URL_HOST
+          value: {{ .Values.keycloak.database.host | quote }}
+        - name: KC_DB_URL_PORT
+          value: {{ .Values.keycloak.database.port | quote }}
+        - name: KC_DB_URL_DATABASE
+          value: {{ .Values.keycloak.database.database | quote }}
+        - name: KC_DB_USERNAME
+          value: {{ .Values.keycloak.database.username | quote }}
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "keycloak.fullname" . }}-secret
+              key: db-password
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        command:
+        - /opt/keycloak/bin/kc.sh
+        - start-dev
+        volumeMounts:
+        - name: keycloak-storage
+          mountPath: /opt/keycloak/data
+        resources:
+          {{- toYaml .Values.keycloak.resources | nindent 10 }}
+      volumes:
+      - name: keycloak-storage
+        persistentVolumeClaim:
+          claimName: {{ include "keycloak.fullname" . }}-pvc

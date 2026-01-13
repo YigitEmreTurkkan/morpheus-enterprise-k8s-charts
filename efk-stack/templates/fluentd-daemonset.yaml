@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "efk-stack.fullname" . }}-fluentd
+  labels:
+    {{- include "efk-stack.labels" . | nindent 4 }}
+    component: fluentd
+spec:
+  selector:
+    matchLabels:
+      {{- include "efk-stack.selectorLabels" . | nindent 6 }}
+      component: fluentd
+  template:
+    metadata:
+      labels:
+        {{- include "efk-stack.selectorLabels" . | nindent 8 }}
+        component: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: "{{ .Values.efk.fluentd.image.repository }}:{{ .Values.efk.fluentd.image.tag }}"
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: "{{ include "efk-stack.fullname" . }}-elasticsearch"
+        - name: ELASTICSEARCH_PORT
+          value: "{{ .Values.efk.elasticsearch.port }}"
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        resources:
+          {{- toYaml .Values.efk.fluentd.resources | nindent 10 }}
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers

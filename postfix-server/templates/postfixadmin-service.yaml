@@ -1,0 +1,21 @@
+{{- if .Values.postfixadmin.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-admin
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    component: postfixadmin
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  selector:
+    {{- include "postfix-server.selectorLabels" . | nindent 4 }}
+    component: postfixadmin
+{{- end }}
+
+

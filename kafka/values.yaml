@@ -1,0 +1,28 @@
+kafka:
+  image:
+    repository: apache/kafka
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 50Gi
+  port: 9092
+  zookeeper:
+    enabled: true
+    image: zookeeper
+    tag: "latest"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+
+ingress:
+  enabled: false  # Kafka genelde internal kullanılır
+  className: "nginx"
+  host: kafka.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

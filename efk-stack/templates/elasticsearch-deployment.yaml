@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "efk-stack.fullname" . }}-elasticsearch
+  labels:
+    {{- include "efk-stack.labels" . | nindent 4 }}
+    component: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "efk-stack.selectorLabels" . | nindent 6 }}
+      component: elasticsearch
+  template:
+    metadata:
+      labels:
+        {{- include "efk-stack.selectorLabels" . | nindent 8 }}
+        component: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: "{{ .Values.efk.elasticsearch.image.repository }}:{{ .Values.efk.elasticsearch.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.efk.elasticsearch.port }}
+          protocol: TCP
+        env:
+        - name: discovery.type
+          value: "single-node"
+        - name: ES_JAVA_OPTS
+          value: "-Xms1g -Xmx1g"
+        volumeMounts:
+        - name: elasticsearch-storage
+          mountPath: /usr/share/elasticsearch/data
+        resources:
+          {{- toYaml .Values.efk.elasticsearch.resources | nindent 10 }}
+      volumes:
+      - name: elasticsearch-storage
+        persistentVolumeClaim:
+          claimName: {{ include "efk-stack.fullname" . }}-elasticsearch-pvc

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kafka.fullname" . }}
+  labels:
+    {{ include "kafka.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "kafka.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "kafka.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: kafka
+        image: "{{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}"
+        imagePullPolicy: {{ .Values.kafka.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 9092
+          protocol: TCP
+        {{ if .Values.kafka.resources }}
+        resources:
+          {{ toYaml .Values.kafka.resources | nindent 10 }}
+        {{ end }}
+        {{ if .Values.kafka.storage }}
+        volumeMounts:
+        - name: kafka-storage
+          mountPath: /data
+        {{ end }}
+      {{ if .Values.kafka.storage }}
+      volumes:
+      - name: kafka-storage
+        persistentVolumeClaim:
+          claimName: {{ include "kafka.fullname" . }}-pvc
+      {{ end }}

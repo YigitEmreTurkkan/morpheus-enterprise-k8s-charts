@@ -1,0 +1,8 @@
+apiVersion: v2
+name: roundcube-webmail
+description: A Helm chart for Roundcube webmail interface on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.6"
+
+

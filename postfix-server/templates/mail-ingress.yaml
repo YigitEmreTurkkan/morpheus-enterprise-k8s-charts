@@ -1,0 +1,43 @@
+{{- if and .Values.ingress.enabled .Values.ingress.http.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "postfix-server.fullname" . }}-http
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+  {{- if .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.secretName }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          {{- if and .Values.postfixadmin.enabled .Values.ingress.postfixadmin.enabled }}
+          - path: {{ .Values.ingress.postfixadmin.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "postfix-server.fullname" . }}-admin
+                port:
+                  number: 80
+          {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "postfix-server.fullname" . }}
+                port:
+                  number: {{ .Values.mail.ports.http }}
+{{- end }}
+

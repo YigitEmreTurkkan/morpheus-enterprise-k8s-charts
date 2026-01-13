@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "postfix-server.fullname" . }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    component: mail-server
+spec:
+  type: ClusterIP
+  ports:
+  - name: smtp
+    port: {{ .Values.mail.ports.smtp }}
+    targetPort: smtp
+    protocol: TCP
+  - name: smtp-submission
+    port: {{ .Values.mail.ports.smtpSubmission }}
+    targetPort: smtp-submission
+    protocol: TCP
+  - name: pop3
+    port: {{ .Values.mail.ports.pop3 }}
+    targetPort: pop3
+    protocol: TCP
+  - name: imap
+    port: {{ .Values.mail.ports.imap }}
+    targetPort: imap
+    protocol: TCP
+  - name: pop3s
+    port: {{ .Values.mail.ports.pop3s }}
+    targetPort: pop3s
+    protocol: TCP
+  - name: imaps
+    port: {{ .Values.mail.ports.imaps }}
+    targetPort: imaps
+    protocol: TCP
+  - name: http
+    port: {{ .Values.mail.ports.http }}
+    targetPort: http
+    protocol: TCP
+  selector:
+    {{- include "postfix-server.selectorLabels" . | nindent 4 }}
+    component: mail-server
+
+

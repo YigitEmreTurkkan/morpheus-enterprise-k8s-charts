@@ -3,6 +3,7 @@ database:
     repository: mysql
     tag: "8.0"
     pullPolicy: IfNotPresent
+  port: 3306
   storage:
     size: 10Gi
   credentials:
@@ -18,3 +19,16 @@ database:
       cpu: 250m
       memory: 256Mi
 
+ingress:
+  enabled: true  # Expose MySQL via ingress TCP ConfigMap
+  className: "nginx"
+  namespace: "ingress-nginx"
+  host: mysql.cloudflex.tr  # Hostname for MySQL access (used for documentation/DNS)
+  annotations:
+    # Cluster default TLS will be used automatically by ingress controller
+    # If your cluster has a default TLS certificate configured, it will be used
+    # If you need custom annotations (e.g., cert-manager), add them here
+    # Example: cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: false  # MySQL uses TCP, not HTTP/TLS through ingress
+    secretName: ""

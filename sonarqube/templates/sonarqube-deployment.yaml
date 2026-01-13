@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sonarqube.fullname" . }}
+  labels:
+    {{ include "sonarqube.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "sonarqube.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "sonarqube.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: sonarqube
+        image: "{{ .Values.sonarqube.image.repository }}:{{ .Values.sonarqube.image.tag }}"
+        imagePullPolicy: {{ .Values.sonarqube.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 9000
+          protocol: TCP
+        {{ if .Values.sonarqube.resources }}
+        resources:
+          {{ toYaml .Values.sonarqube.resources | nindent 10 }}
+        {{ end }}
+        {{ if .Values.sonarqube.storage }}
+        volumeMounts:
+        - name: sonarqube-storage
+          mountPath: /data
+        {{ end }}
+      {{ if .Values.sonarqube.storage }}
+      volumes:
+      - name: sonarqube-storage
+        persistentVolumeClaim:
+          claimName: {{ include "sonarqube.fullname" . }}-pvc
+      {{ end }}

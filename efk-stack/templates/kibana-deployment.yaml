@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "efk-stack.fullname" . }}-kibana
+  labels:
+    {{- include "efk-stack.labels" . | nindent 4 }}
+    component: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "efk-stack.selectorLabels" . | nindent 6 }}
+      component: kibana
+  template:
+    metadata:
+      labels:
+        {{- include "efk-stack.selectorLabels" . | nindent 8 }}
+        component: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: "{{ .Values.efk.kibana.image.repository }}:{{ .Values.efk.kibana.image.tag }}"
+        imagePullPolicy: {{ .Values.efk.kibana.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.efk.kibana.port }}
+          protocol: TCP
+        env:
+        - name: ELASTICSEARCH_HOSTS
+          value: "http://{{ include "efk-stack.fullname" . }}-elasticsearch:{{ .Values.efk.elasticsearch.port }}"
+        volumeMounts:
+        - name: kibana-storage
+          mountPath: /usr/share/kibana/data
+        resources:
+          {{- toYaml .Values.efk.kibana.resources | nindent 10 }}
+      volumes:
+      - name: kibana-storage
+        persistentVolumeClaim:
+          claimName: {{ include "efk-stack.fullname" . }}-kibana-pvc

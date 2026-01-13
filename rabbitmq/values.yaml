@@ -1,0 +1,28 @@
+rabbitmq:
+  image:
+    repository: rabbitmq
+    tag: "3-management"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 20Gi
+  port: 5672
+  managementPort: 15672
+  admin:
+    user: admin
+    password: admin123
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: rabbitmq.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

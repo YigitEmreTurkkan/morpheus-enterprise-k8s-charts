@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gitlab-runner.fullname" . }}
+  labels:
+    {{ include "gitlab-runner.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "gitlab-runner.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "gitlab-runner.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: gitlab-runner
+        image: "{{ .Values.gitlab-runner.image.repository }}:{{ .Values.gitlab-runner.image.tag }}"
+        imagePullPolicy: {{ .Values.gitlab-runner.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8093
+          protocol: TCP
+        {{ if .Values.gitlab-runner.resources }}
+        resources:
+          {{ toYaml .Values.gitlab-runner.resources | nindent 10 }}
+        {{ end }}
+        {{ if .Values.gitlab-runner.storage }}
+        volumeMounts:
+        - name: gitlab-runner-storage
+          mountPath: /data
+        {{ end }}
+      {{ if .Values.gitlab-runner.storage }}
+      volumes:
+      - name: gitlab-runner-storage
+        persistentVolumeClaim:
+          claimName: {{ include "gitlab-runner.fullname" . }}-pvc
+      {{ end }}

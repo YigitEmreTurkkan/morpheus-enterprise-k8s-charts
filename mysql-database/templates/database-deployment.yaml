@@ -23,7 +23,7 @@ spec:
         imagePullPolicy: {{ .Values.database.image.pullPolicy }}
         ports:
         - name: mysql
-          containerPort: 3306
+          containerPort: {{ .Values.database.port }}
           protocol: TCP
         env:
         - name: MYSQL_DATABASE

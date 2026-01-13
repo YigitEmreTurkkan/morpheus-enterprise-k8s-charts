@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rabbitmq.fullname" . }}
+  labels:
+    {{ include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "rabbitmq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "rabbitmq.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: rabbitmq
+        image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
+        imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 15672
+          protocol: TCP
+        {{ if .Values.rabbitmq.resources }}
+        resources:
+          {{ toYaml .Values.rabbitmq.resources | nindent 10 }}
+        {{ end }}
+        {{ if .Values.rabbitmq.storage }}
+        volumeMounts:
+        - name: rabbitmq-storage
+          mountPath: /data
+        {{ end }}
+      {{ if .Values.rabbitmq.storage }}
+      volumes:
+      - name: rabbitmq-storage
+        persistentVolumeClaim:
+          claimName: {{ include "rabbitmq.fullname" . }}-pvc
+      {{ end }}

@@ -1,0 +1,33 @@
+sonarqube:
+  image:
+    repository: sonarqube
+    tag: "community"
+    pullPolicy: IfNotPresent
+  storage:
+    size: 20Gi
+  port: 9000
+  admin:
+    password: admin123
+  database:
+    type: postgresql
+    host: postgresql-database.monitoring.svc.cluster.local
+    port: 5432
+    database: sonarqube
+    username: sonarqube
+    password: sonarqube123
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: sonarqube.cloudflex.tr
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: "cloudflex-wildcard-tls"

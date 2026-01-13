@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "efk-stack.fullname" . }}-kibana-pvc
+  labels:
+    {{- include "efk-stack.labels" . | nindent 4 }}
+    component: kibana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.efk.kibana.storage.size }}

@@ -1,0 +1,151 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "postfix-server.fullname" . }}
+  labels:
+    {{- include "postfix-server.labels" . | nindent 4 }}
+    component: mail-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "postfix-server.selectorLabels" . | nindent 6 }}
+      component: mail-server
+  template:
+    metadata:
+      labels:
+        {{- include "postfix-server.selectorLabels" . | nindent 8 }}
+        component: mail-server
+    spec:
+      containers:
+      - name: postfix
+        image: "{{ .Values.mail.image.repository }}:{{ .Values.mail.image.tag }}"
+        imagePullPolicy: {{ .Values.mail.image.pullPolicy }}
+        ports:
+        - name: smtp
+          containerPort: {{ .Values.mail.ports.smtp }}
+          protocol: TCP
+        - name: smtp-submission
+          containerPort: {{ .Values.mail.ports.smtpSubmission }}
+          protocol: TCP
+        - name: pop3
+          containerPort: {{ .Values.mail.ports.pop3 }}
+          protocol: TCP
+        - name: imap
+          containerPort: {{ .Values.mail.ports.imap }}
+          protocol: TCP
+        - name: pop3s
+          containerPort: {{ .Values.mail.ports.pop3s }}
+          protocol: TCP
+        - name: imaps
+          containerPort: {{ .Values.mail.ports.imaps }}
+          protocol: TCP
+        - name: http
+          containerPort: {{ .Values.mail.ports.http }}
+          protocol: TCP
+        env:
+        - name: HOSTNAME
+          value: {{ .Values.mail.hostname | quote }}
+        - name: DOMAINNAME
+          value: {{ .Values.mail.domain | quote }}
+        - name: DMS_HOSTNAME
+          value: {{ .Values.mail.hostname | quote }}
+        - name: DMS_DOMAINNAME
+          value: {{ .Values.mail.domain | quote }}
+        - name: OVERRIDE_HOSTNAME
+          value: {{ .Values.mail.hostname | quote }}
+        - name: OVERRIDE_DOMAINNAME
+          value: {{ .Values.mail.domain | quote }}
+        - name: POSTFIX_MYHOSTNAME
+          value: {{ .Values.mail.postfix.myhostname | quote }}
+        - name: POSTFIX_MYDOMAIN
+          value: {{ .Values.mail.postfix.mydomain | quote }}
+        - name: POSTFIX_MYNETWORKS
+          value: {{ .Values.mail.postfix.mynetworks | quote }}
+        - name: POSTFIX_MESSAGE_SIZE_LIMIT
+          value: {{ .Values.mail.postfix.message_size_limit | quote }}
+        - name: ENABLE_POP3
+          value: "1"
+        - name: ENABLE_IMAP
+          value: "1"
+        - name: ENABLE_SMTP
+          value: "1"
+        - name: ENABLE_SUBMISSION
+          value: "1"
+        - name: ENABLE_SMTPS
+          value: "1"
+        - name: ONE_DIR
+          value: "1"
+        - name: PERMIT_DOCKER
+          value: "none"
+        - name: SSL_TYPE
+          value: "self-signed"
+        - name: ENABLE_FAIL2BAN
+          value: "0"
+        - name: ENABLE_MANAGESIEVE
+          value: "0"
+        - name: ENABLE_FETCHMAIL
+          value: "0"
+        - name: ENABLE_LDAP
+          value: "0"
+        - name: ENABLE_AMAVIS
+          value: "0"
+        - name: ENABLE_CLAMAV
+          value: "0"
+        - name: ENABLE_SPAMASSASSIN
+          value: "0"
+        - name: ENABLE_POSTGREY
+          value: "0"
+        - name: POSTMASTER_ADDRESS
+          value: "postmaster@{{ .Values.mail.domain }}"
+        volumeMounts:
+        - name: mail-storage
+          mountPath: /var/mail
+        - name: mail-config
+          mountPath: /tmp/docker-mailserver
+        - name: mail-configmap
+          mountPath: /tmp/docker-mailserver-config
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.mail.ports.smtp }}
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.mail.ports.smtp }}
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.mail.resources | nindent 10 }}
+      initContainers:
+      - name: setup-config
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Setting up mail server configuration..."
+          cp /tmp/config/postfix-accounts.cf /tmp/docker-mailserver/postfix-accounts.cf || true
+          cp /tmp/config/postfix-virtual.cf /tmp/docker-mailserver/postfix-virtual.cf || true
+          cp /tmp/config/user-patches.sh /tmp/docker-mailserver/user-patches.sh || true
+          chmod +x /tmp/docker-mailserver/user-patches.sh || true
+          ls -la /tmp/docker-mailserver/
+        volumeMounts:
+        - name: mail-config
+          mountPath: /tmp/docker-mailserver
+        - name: mail-configmap
+          mountPath: /tmp/config
+      volumes:
+      - name: mail-storage
+        persistentVolumeClaim:
+          claimName: {{ include "postfix-server.fullname" . }}-pvc
+      - name: mail-config
+        emptyDir: {}
+      - name: mail-configmap
+        configMap:
+          name: {{ include "postfix-server.fullname" . }}-config
+
